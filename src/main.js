@@ -10,8 +10,11 @@ const { fork, spawn } = require("node:child_process");
 const os = require("node:os");
 const { pathToFileURL } = require("node:url");
 
-// The backend: the repository's built code beside the app in development, its copy in the app's resources when packaged.
-const backend = app.isPackaged ? path.join(process.resourcesPath, "backend") : path.resolve(__dirname, "..", "..", "..");
+// The backend: the world engine's built checkout in development (NOVEL_CONSOLE_BACKEND, else novel-ontology-pi beside this
+// repository), its copy in the app's resources when packaged. story-graph (the reading, the cast, the characters) is a
+// package of the backend, in its node_modules.
+const backend = app.isPackaged ? path.join(process.resourcesPath, "backend") : path.resolve(process.env.NOVEL_CONSOLE_BACKEND || path.join(__dirname, "..", "..", "novel-ontology-pi"));
+const storyGraph = path.join(backend, "node_modules", "story-graph");
 const serverScript = path.join(backend, "dist", "src", "server", "server.js");
 // The Node the backend runs on. On Windows a native module built for Node (LadybugDB) links node.exe by name and cannot
 // load inside this app's own executable, so the Windows app carries the official node.exe (resources/backend/node; in
@@ -137,10 +140,11 @@ ipcMain.handle("worldReviewStep", async (event, wid, volume, step) => {
 // agent's steps (the place tree, the look pass) as workflows with the agent open in the chat. Paid steps spend the keys.
 const volumeModule = () => import(pathToFileURL(path.join(backend, "engine", "volume", "volume.mjs")).href);
 // The keys a run spends (never shown): the environment's, then the console's own store, then the Windows Credential
-// Manager's novel-ontology/<name> (engine/volume/credentials.mjs; the user, 2026-11-15: keys kept in Windows' store).
-const credentialsModule = () => import(pathToFileURL(path.join(backend, "engine", "volume", "credentials.mjs")).href);
+// Manager's novel-ontology/<name> (story-graph's engine/credentials.mjs; the user, 2026-11-15: keys kept in Windows' store).
+const credentialsModule = () => import(pathToFileURL(path.join(storyGraph, "engine", "credentials.mjs")).href);
+const secretsModule = () => import(pathToFileURL(path.join(storyGraph, "dist", "src", "ground", "connectors", "secrets.js")).href);
 async function modelKeys() {
-  const secrets = await import(pathToFileURL(path.join(backend, "dist", "src", "ground", "connectors", "secrets.js")).href);
+  const secrets = await secretsModule();
   const stored = await credentialsModule().then((module) => module.storedKeys({})).catch(() => ({}));
   return { work: process.env.WORK_LLM_API_KEY?.trim() || secrets.getStoredSecret("work-llm") || stored.WORK_LLM_API_KEY || null,
     jev: process.env.TYPESAFE_API_KEY?.trim() || secrets.getStoredSecret("typesafe") || stored.TYPESAFE_API_KEY || null };
@@ -295,7 +299,7 @@ ipcMain.handle("answerReviewWithAgent", async (event, wid, volume, options = {})
 /** Pi on the work model (tools/pi-review/folder-arrange.mjs): a session of the console's own, new or continued, whose one tool
  * runs the folder's novel command; each step and the session's file go to onStep. */
 async function runPi({ folder, novel, skill, prompt, sessionFile = null, onStep = () => {}, env = {} }) {
-  const secrets = await import(pathToFileURL(path.join(backend, "dist", "src", "ground", "connectors", "secrets.js")).href);
+  const secrets = await secretsModule();
   const key = process.env.WORK_LLM_API_KEY?.trim() || secrets.getStoredSecret("work-llm");
   if (!key) throw new Error("Pi works on the work model: enter its key with the key button, then press Ask again.");
   const script = process.env.NOVEL_CONSOLE_PI_RUNNER || path.join(backend, "tools", "pi-review", "folder-arrange.mjs");

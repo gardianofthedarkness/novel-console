@@ -1,16 +1,19 @@
-// The backend the app carries (apps/novel-console/build/backend, copied into the app's resources): the repository's built
-// code (dist, without its tests), the reading's scripts (engine/*.mjs), its settings (config/), the reader page, and the production
-// packages the code imports, laid out as in the repository so every relative path still holds. Run after `npm run build`
-// at the repository's root.
+// The backend the app carries (build/backend, copied into the app's resources): the world engine's built checkout
+// (novel-ontology-pi: its dist without tests, its scripts engine/*.mjs, its settings config/, the reader page) and the
+// production packages it imports, story-graph among them, laid out as in the checkout so every relative path still holds.
+// Run after `npm run build` in that checkout. Which checkout: --engine <dir>, else NOVEL_CONSOLE_BACKEND, else
+// novel-ontology-pi beside this repository.
 import { execFileSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, readdirSync, renameSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { basename, dirname, join, relative, resolve } from "node:path";
+import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-const app = resolve(dirname(fileURLToPath(import.meta.url)), ".."), repository = resolve(app, "..", "..");
+const app = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const engineAt = process.argv.indexOf("--engine");
+const repository = resolve(engineAt >= 0 ? process.argv[engineAt + 1] : process.env.NOVEL_CONSOLE_BACKEND || join(app, "..", "novel-ontology-pi"));
 const out = join(app, "build", "backend");
-if (!existsSync(join(repository, "dist", "src", "server", "server.js"))) throw new Error("Build the repository first (npm run build at its root).");
+if (!existsSync(join(repository, "dist", "src", "server", "server.js"))) throw new Error(`Build the world engine first (npm run build in ${repository}).`);
 // An earlier backend goes to the Trash (on Windows, build/old beside it: a rename cannot leave the drive), never deleted here.
 const windows = process.platform === "win32", setAside = windows ? join(app, "build", "old") : join(homedir(), ".Trash");
 if (existsSync(out)) { mkdirSync(setAside, { recursive: true }); renameSync(out, join(setAside, `novel-console-backend-${Date.now()}`)); }
@@ -66,6 +69,13 @@ let packages = 0;
 for (const path of [...new Set(listed)]) {
   const rel = relative(repository, path);
   if (!rel.startsWith("node_modules") || (native.test(rel) && !rel.includes(here))) continue;
+  // story-graph (a linked checkout in development): only what it publishes (its package.json "files") and its own packages.
+  if (rel === join("node_modules", "story-graph")) { storyGraph(rel); packages++; continue; }
+  if (rel.startsWith(join("node_modules", "story-graph") + sep)) continue;
   copy(rel); packages++;
+}
+function storyGraph(rel) {
+  const from = join(repository, rel), pkg = JSON.parse(readFileSync(join(from, "package.json"), "utf8"));
+  for (const name of [...(pkg.files ?? []), "package.json", "node_modules"]) if (existsSync(join(from, name))) cpSync(join(from, name), join(out, rel, name), { recursive: true, dereference: true, filter: (path) => !/[\\/]node_modules[\\/]\.bin([\\/]|$)/.test(path) && !/\.test\.(m?js|ts)$/.test(path) });
 }
 console.log(JSON.stringify({ backend: out, packages }));
