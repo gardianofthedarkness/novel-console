@@ -3,6 +3,11 @@
 Novel Console is a Mac app for reading your own EPUB novels with the help of AI.
 It reads each book once, then gives you a reader that marks the characters, places and story threads as you go.
 You can also open views for each book's characters, places and threads.
+Pick any scene on the threads graph and chat with a character as they were at that moment, or browse everyone and every place across a whole series.
+
+[![Demo](https://raw.githubusercontent.com/gardianofthedarkness/story-graph/main/docs/demo/fork.jpg)](https://github.com/gardianofthedarkness/story-graph/blob/main/docs/demo/story-graph-demo.mp4)
+
+[Watch the demo](https://github.com/gardianofthedarkness/story-graph/blob/main/docs/demo/story-graph-demo.mp4) (1:37, in story-graph's repository).
 
 Your books stay on your Mac.
 The app only adds a small hidden `.novel` folder next to them.
