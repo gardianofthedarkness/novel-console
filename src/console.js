@@ -9,7 +9,7 @@ const esc = (text) => String(text ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp
 const remember = { get(key, fallback) { try { const value = localStorage.getItem(`console:${key}`); return value === null ? fallback : JSON.parse(value); } catch { return fallback; } }, set(key, value) { try { localStorage.setItem(`console:${key}`, JSON.stringify(value)); } catch {} } };
 const pct = (value) => (typeof value === "number" ? `${Math.round(value * 100)}%` : "");
 
-let libs = [], current = null, world = null, record = null, selectedChar = null, selectedPlace = null, strandFocus = null, debugLine = null;
+let libs = [], current = null, world = null, record = null, selectedChar = null, selectedPlace = null, strandFocus = null, strandPick = null, debugLine = null;
 const trees = new Map(), books = new Map(), expanded = new Set(), running = new Map(), worlds = new Map();
 const ask = (folder, method, params) => host.ask(folder, method, params);
 const say = (text, bad = false) => { $("status").textContent = text; $("status").className = bad ? "err" : ""; };
@@ -51,8 +51,8 @@ document.addEventListener("keydown", (event) => {
 
 
 // ---------- The left strip (as VS Code's): Library, Outline, Search, Readings; the active icon folds the left panel. ----------
-const LEFT_TITLES = { library: "Library", outline: "Outline", search: "Search", characters: "Characters", places: "Places", strands: "Strands", record: "Record", problems: "Problems", debug: "Reading details", readings: "Readings", review: "Review", run: "Run" };
-const OWN_LEFT = new Set(["library", "outline", "search", "readings", "review", "run"]);
+const LEFT_TITLES = { cast: "Cast & places", library: "Library", outline: "Outline", search: "Search", characters: "Characters", places: "Places", strands: "Strands", record: "Record", problems: "Problems", debug: "Reading details", readings: "Readings", review: "Review", run: "Run" };
+const OWN_LEFT = new Set(["library", "outline", "search", "readings", "review", "run", "cast"]);
 let leftView = remember.get("left", "library"), searchTimer = null, lastSearch = null;
 const leftOpen = () => !$("work").classList.contains("no-left");
 function setLeft(open) { $("work").classList.toggle("no-left", !open); remember.set("leftOpen", open); markLeft(); }
@@ -74,6 +74,7 @@ function renderLeft(view = leftView) {
   if (view === "readings") renderReadings();
   if (view === "review") renderReview();
   if (view === "run") renderRun();
+  if (view === "cast") renderCast();
   if (!OWN_LEFT.has(view)) renderView(view);
 }
 for (const button of document.querySelectorAll("#leftbar [data-left]")) button.addEventListener("click", () => showLeft(button.dataset.left, true));
@@ -560,7 +561,7 @@ function openBook(folder, book, at) {
   $("welcome").hidden = true; $("reader").hidden = false;
   $("reader").src = `app://console/reader?id=${encodeURIComponent(book.id)}${at ? `&at=${encodeURIComponent(at)}` : ""}`;
   $("crumb").textContent = book.title;
-  world = null; record = null; selectedChar = null; selectedPlace = null; strandFocus = null; debugLine = null;
+  world = null; record = null; selectedChar = null; selectedPlace = null; strandFocus = null; strandPick = null; debugLine = null;
   const badge = $("badge-problems"); badge.hidden = !book.problems; badge.textContent = book.problems > 99 ? "99+" : String(book.problems || "");
   lastSearch = null; render(); loadWorld(); if (leftView !== "library") renderLeft();
 }
@@ -606,6 +607,7 @@ function renderView(view) {
   if (view === "places") renderPlaces(body);
   if (view === "strands") renderStrands(body);
 }
+// Views of the whole world (studio.js) render themselves.
 const timeOf = (() => { const memo = new WeakMap(); return () => { if (!world?.time) return new Map(); if (!memo.has(world)) memo.set(world, new Map(world.time.map((node) => [node.id, node]))); return memo.get(world); }; })();
 const dayOf = (scene) => { const nodes = timeOf(); for (let at = nodes.get(scene.node), n = 0; at && n < 8; at = nodes.get(at.parent), n++) if (at.level === "day") return at.label; return null; };
 const whenOf = (scene) => (scene.when ? scene.when.split(" › ").slice(1).join(" ") : "—") + (scene.flashback ? " (past)" : "");
@@ -730,18 +732,22 @@ function renderStrandsInto(target) {
   scenes.forEach((scene, n) => {
     const known = scene.strand && lane.has(scene.strand), color = colorOf(scene.strand), cx = known ? x(scene.strand) : 10, dim = fade(scene.strand);
     if (joinedAt.has(n)) svg += `<circle cx="${cx}" cy="${y(n)}" r="7.5" fill="none" stroke="${color}" stroke-width="2"/>`;
-    svg += `<circle class="snode" data-sentence="${esc(scene.first)}" cx="${cx}" cy="${y(n)}" r="4.8" fill="${scene.flashback ? "var(--panel)" : color}" stroke="${color}" stroke-width="1.5"${dim}/>`;
+    if (strandPick === scene.id) svg += `<circle cx="${cx}" cy="${y(n)}" r="9.5" fill="none" stroke="var(--accent)" stroke-width="2.5"/>`;
+    svg += `<circle class="snode" data-scene="${esc(scene.id)}" data-sentence="${esc(scene.first)}" cx="${cx}" cy="${y(n)}" r="4.8" fill="${scene.flashback ? "var(--panel)" : color}" stroke="${color}" stroke-width="1.5"${dim}/>`;
     const today = dayOf(scene), dayTag = today && today !== day ? `<span class="day">${esc(today)}</span>` : ""; if (today) day = today;
     const tips = (tipAt.get(n) ?? []).map((strand) => `<span class="sref${strand.into ? " join" : ""}" style="--lc:${colorOf(strand.id)}" data-strand="${esc(strand.id)}" title="${esc(strand.people.map(nameOf).join(", "))}">${esc(who(strand))}${strand.into ? ` → ${esc(who(byId.get(strand.into) ?? strand))}` : ""}</span>`).join("");
-    rows += `<div class="srow${strandFocus && scene.strand !== strandFocus ? " dim" : ""}" data-sentence="${esc(scene.first)}" title="${esc(`${scene.id} · ${scene.when ?? ""}`)}">${dayTag}${tips}<span class="pl">${esc(placeName(scene.place))}</span><span class="pp">${esc(scene.present.slice(0, 3).map(nameOf).join(", "))}${scene.present.length > 3 ? ` +${scene.present.length - 3}` : ""}</span></div>`;
+    rows += `<div class="srow${strandFocus && scene.strand !== strandFocus ? " dim" : ""}${strandPick === scene.id ? " picked" : ""}" data-scene="${esc(scene.id)}" data-sentence="${esc(scene.first)}" title="${esc(`${scene.id} · ${scene.when ?? ""}`)}">${dayTag}${tips}<span class="pl">${esc(placeName(scene.place))}</span><span class="pp">${esc(scene.present.slice(0, 3).map(nameOf).join(", "))}${scene.present.length > 3 ? ` +${scene.present.length - 3}` : ""}</span></div>`;
   });
   const legend = `<div class="legend">${told.map((strand) => `<button data-strand="${esc(strand.id)}" aria-pressed="${strandFocus === strand.id}" style="--lc:${colorOf(strand.id)}" title="${esc(strand.people.map(nameOf).join(", "))}"><i></i>${esc(who(strand))} · ${strand.scenes.length}${strand.open ? "" : strand.into ? " → joins" : ""}</button>`).join("")}</div>`;
   const scroll = target.scrollTop;
-  target.innerHTML = `${legend}<div class="sgraph" style="--gw:${gw}px;--rh:${RH}px"><svg width="${gw}" height="${height}" viewBox="0 0 ${gw} ${height}">${svg}</svg><div class="srows">${rows}</div></div>`;
+  target.innerHTML = `${pickCard()}${legend}<div class="sgraph" style="--gw:${gw}px;--rh:${RH}px"><svg width="${gw}" height="${height}" viewBox="0 0 ${gw} ${height}">${svg}</svg><div class="srows">${rows}</div></div>`;
   target.scrollTop = scroll;
 }
 function strandsClick(event) {
+  if (event.target.closest(".pick")) return pickClick(event);
   const strand = event.target.closest("[data-strand]")?.dataset.strand; if (strand) { strandFocus = strandFocus === strand ? null : strand; renderStrands($("v-strands")); return; }
+  // A scene on the graph is picked (its card above the graph: when, where, who, and a chat forked from it) and shown in the book.
+  const scene = event.target.closest("[data-scene]")?.dataset.scene; if (scene) pickScene(scene);
   const sentence = event.target.closest("[data-sentence]")?.dataset.sentence; if (sentence) reveal(sentence);
 }
 $("v-strands").addEventListener("click", strandsClick);

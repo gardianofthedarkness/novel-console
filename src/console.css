@@ -296,3 +296,57 @@ h4.mini { margin: 12px 0 4px; text-transform: uppercase; letter-spacing: .05em; 
 .chip.bad-chip { color: var(--bad); border: 1px solid var(--bad); }
 pre.run-log { max-height: 320px; overflow: auto; font: 11px/1.4 ui-monospace, Consolas, monospace; background: var(--field); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; white-space: pre-wrap; overflow-wrap: anywhere; margin: 4px 0 12px; }
 .run-step .run-title { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+
+/* A scene picked on the Strands graph, and the chat forked from it (studio.js). */
+.pick { position: sticky; top: 0; z-index: 2; display: grid; gap: 5px; margin: 0 0 8px; padding: 8px 10px; border: 1px solid var(--lc, var(--line)); border-left-width: 4px; border-radius: 8px; background: var(--panel); box-shadow: 0 6px 16px rgb(0 0 0 / .25); }
+.pick.hint { border: 1px dashed var(--line); box-shadow: none; color: var(--dim); font-size: 12px; position: static; }
+.pick-head { display: flex; align-items: center; gap: 6px; }
+.pick-head i { width: 9px; height: 9px; border-radius: 50%; background: var(--lc); }
+.pick-where { font-family: var(--book); color: var(--place); }
+.pick-who { display: flex; flex-wrap: wrap; gap: 4px; }
+.chip.off { opacity: .55; cursor: default; }
+button.fork { display: inline-flex; align-items: baseline; gap: 6px; font-family: var(--book); font-size: 12px; padding: 2px 9px; border-radius: 99px; border-color: var(--accent); background: transparent; }
+button.fork span { font-family: var(--ui); font-size: 10.5px; color: var(--accent); }
+button.fork:hover { background: var(--accent); color: var(--accent-ink); }
+button.fork:hover span { color: var(--accent-ink); }
+.srow.picked { background: var(--current); color: var(--current-ink); }
+.warn { color: var(--warn); }
+
+.panel-head .seg { text-transform: none; }
+.panel-view.call.active { display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; }
+.calls { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+.calls:empty { display: none; }
+.calls button { font-family: var(--book); font-size: 11.5px; padding: 1px 8px; border-radius: 99px; background: var(--chip); border-color: transparent; color: var(--dim); }
+.calls button[aria-selected="true"] { color: var(--ink); border-color: var(--accent); }
+.calls button .k { font-family: var(--ui); color: var(--dim); margin-left: 4px; font-size: 10.5px; }
+.call-head { display: grid; gap: 3px; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+.call-head:empty { display: none; }
+.call-who { display: flex; align-items: baseline; gap: 8px; }
+.call-who b { font-family: var(--book); font-size: 15px; }
+.call-head details summary { font-size: 11.5px; color: var(--dim); }
+.call-head pre { white-space: pre-wrap; font: 12px/1.5 var(--book); max-height: 220px; overflow: auto; margin: 4px 0; padding: 6px 8px; background: var(--raised); border-radius: 6px; }
+.msg.char { font-family: var(--book); font-size: 13.5px; }
+.msg.god { justify-self: stretch; max-width: none; background: transparent; border: 1px dashed var(--jev); color: var(--ink); }
+.msg.god .tools { color: var(--jev); margin: 0 0 2px; }
+.note.time { text-align: center; color: var(--jev); font-size: 11.5px; }
+.call-actions { display: flex; gap: 6px; }
+
+/* Cast & places: the world's people and buildings across its books. */
+.cast-tools { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 10px 0; align-items: center; }
+.cast-tools input { flex: 1 1 120px; min-width: 0; font: 12px var(--ui); color: var(--ink); background: var(--field); border: 1px solid var(--line); border-radius: 6px; padding: 3px 7px; }
+.cast-sum { margin: 0 0 6px 4px; }
+.rows .bk { display: inline-flex; gap: 2px; flex: none; }
+.rows .bk i { width: 5px; height: 10px; border-radius: 1px; background: var(--line); }
+.rows .bk i.in { background: var(--accent); }
+.rows .sc { color: var(--dim); font-size: 11px; flex: none; }
+.rows > li.inline { display: block; cursor: default; padding: 0 6px 8px; }
+.rows > li.inline:hover { background: transparent; }
+.bars { display: grid; gap: 2px; font-size: 11px; }
+.bars div { display: grid; grid-template-columns: 3.6em minmax(0, 1fr) auto; gap: 6px; align-items: center; }
+.bars i { display: block; height: 6px; border-radius: 3px; background: var(--accent); min-width: 2px; }
+.lived { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 12px; }
+.built { display: flex; gap: 10px; align-items: center; }
+.bmap { margin-bottom: 8px; }
+.bmap svg { background: var(--deep); border: 1px solid var(--line); border-radius: 6px; }
+.bmap rect { fill: var(--chip); stroke: var(--accent); stroke-width: .6; cursor: pointer; }
+.bmap rect:hover, .bmap rect.on { fill: var(--accent); }

@@ -26,6 +26,7 @@
     <button data-left="characters" title="Characters: people and things, and each one's path"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></button>
     <button data-left="places" title="Places: what holds what, and who was there"><svg viewBox="0 0 24 24"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg></button>
     <button data-left="strands" title="Strands: who stays together, where they part and meet again"><svg viewBox="0 0 24 24"><circle cx="6" cy="5" r="2.2"/><circle cx="6" cy="19" r="2.2"/><circle cx="18" cy="9" r="2.2"/><path d="M6 7.2v9.6M18 11.2c0 4-6 3.5-11 6.2"/></svg></button>
+    <button data-left="cast" title="Cast &amp; places: every person and building of the world, across its books; chat with anyone as of any point"><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3"/><path d="M2.5 19c0-3.3 2.5-6 5.5-6s5.5 2.7 5.5 6"/><path d="M14 20V9l4-3 4 3v11z"/><path d="M17 13h2M17 16h2"/></svg></button>
     <button data-left="record" title="Record: an entry and every line that refers to it"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M9 11h7M9 15h7M9 7h4"/></svg></button>
     <button data-left="review" title="Review: what the world's run held for an answer"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg><span class="badge" id="badge-review" hidden></span></button>
     <button data-left="run" title="Run: the world book's steps, each with a button; stop, logs, what each costs"><svg viewBox="0 0 24 24"><path d="M4 6h9M4 12h6M4 18h9"/><path d="M15 9l6 4-6 4z"/></svg><span class="badge" id="badge-run" hidden></span></button>
@@ -43,6 +44,7 @@
     <div class="left-view" data-left="characters"><div class="seg" id="char-kind"><button data-kind="people" aria-pressed="true">People</button><button data-kind="things" aria-pressed="false">Things</button><button data-kind="unnamed" aria-pressed="false">Unnamed</button></div><div class="view-body" id="v-characters"></div></div>
     <div class="left-view" data-left="places"><div class="view-body" id="v-places"></div></div>
     <div class="left-view" data-left="strands"><div class="view-body" id="v-strands"></div></div>
+    <div class="left-view" data-left="cast"><div class="cast-tools"><div class="seg" id="cast-kind"><button data-kind="people" aria-pressed="true">People</button><button data-kind="buildings" aria-pressed="false">Buildings</button><button data-kind="places" aria-pressed="false">All places</button></div><input id="cast-filter" type="search" placeholder="Filter by name" autocomplete="off" spellcheck="false"></div><div class="view-body" id="l-cast"></div></div>
     <div class="left-view" data-left="record"><div class="view-body" id="v-record"></div></div>
     <div class="left-view" data-left="review"><div class="view-body" id="l-review"></div></div>
     <div class="left-view" data-left="run"><div class="view-body" id="l-run"></div></div>
@@ -69,7 +71,7 @@
   </main>
   <div class="split" data-split="panel" aria-hidden="true"></div>
   <aside class="panel" id="panel" aria-label="Agents">
-    <header class="panel-head"><b>Chat</b><span class="count" id="chat-count"></span><span class="grow"></span><button class="icon small" id="panel-fold" title="Fold the chat (⌘I)">›</button></header>
+    <header class="panel-head"><div class="seg" id="panel-kind"><button data-panel="chat" aria-pressed="true">Agents</button><button data-panel="call" aria-pressed="false">Characters</button></div><span class="count" id="chat-count"></span><span class="grow"></span><button class="icon small" id="panel-fold" title="Fold the chat (⌘I)">›</button></header>
     <div class="panel-view chat active" data-view="chat">
       <div class="chat-tools"><button id="chat-back" class="icon small" title="All sessions" hidden>‹ Sessions</button><span class="grow"></span><button id="chat-refresh" class="icon small" title="Look for sessions again">↻</button></div>
       <div class="hosts" id="hosts" role="tablist"></div>
@@ -77,6 +79,15 @@
       <form class="compose" id="compose" hidden>
         <textarea id="compose-text" rows="3" placeholder="Message this session (⌘↵ to send)"></textarea>
         <div class="compose-row"><span class="muted" id="compose-note"></span><button class="primary" id="compose-send" type="submit">Send</button></div>
+      </form>
+    </div>
+    <div class="panel-view call" data-view="call">
+      <div class="calls" id="calls" role="tablist"></div>
+      <div class="call-head" id="call-head"></div>
+      <div class="chat-body" id="call-body"></div>
+      <form class="compose" id="call-compose" hidden>
+        <textarea id="call-text" rows="2" placeholder="Say something to them (⌘↵ to send)"></textarea>
+        <div class="compose-row"><span class="call-actions"><button type="button" class="ghost" id="call-wait" title="Say nothing: time passes, and they go on to their next scene in the books">Let time pass</button><button type="button" class="ghost" id="call-ask" title="Ask the world itself: it knows where everyone is now and what the books say comes next">Ask the world</button></span><button class="primary" id="call-send" type="submit">Send</button></div>
       </form>
     </div>
   </aside>
@@ -93,5 +104,6 @@
   </form>
 </dialog>
 <script src="console.js"></script>
+<script src="studio.js"></script>
 </body>
 </html>

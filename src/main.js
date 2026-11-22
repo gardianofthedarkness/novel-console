@@ -82,7 +82,9 @@ const listing = () => libraries().map((folder) => ({ path: folder, name: path.ba
 
 // What a page may ask the server: the novel requests, never a key's entry (that goes through setKeys below).
 const ALLOWED = new Set(["novel/scan", "novel/tree", "novel/book", "novel/cast", "novel/document", "novel/record", "novel/refs", "novel/bookProblems", "novel/world", "novel/search", "novel/basicStep", "novel/basic", "novel/series", "novel/arrange",
-  "novel/read", "novel/readDocument", "novel/readLine", "novel/readPortrait", "novel/locate", "novel/sentenceAt", "novel/startReading", "novel/reading", "novel/stopReading"]);
+  "novel/read", "novel/readDocument", "novel/readLine", "novel/readPortrait", "novel/locate", "novel/sentenceAt", "novel/startReading", "novel/reading", "novel/stopReading",
+  // The world's cast and places, and chats forked from a scene (studio.js; each turn of a chat asks the models).
+  "novel/studio", "novel/studioPerson", "novel/studioPlace", "novel/fork", "novel/callTurn", "novel/callAsk"]);
 const reading = () => import(pathToFileURL(path.join(backend, "dist", "src", "server", "reading.js")).href);
 
 ipcMain.handle("libraries", () => listing());
